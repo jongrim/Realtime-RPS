@@ -1,46 +1,5 @@
 'use strict';
 
-var Game = function() {
-  function setPlayerOneChoice(choice) {
-    this.p1Choice = choice;
-  }
-
-  function setPlayerTwoChoice(choice) {
-    this.p2Choice = choice;
-  }
-
-  function declareWinner() {
-    if (this.p1Choice === 'rock') {
-      if (this.p2Choice === 'scissors') {
-        return 1;
-      }
-      if (this.p2Choice === 'paper') {
-        return 2;
-      }
-      return 0;
-    }
-    if (this.p1Choice === 'paper') {
-      if (this.p2Choice === 'rock') {
-        return 1;
-      }
-      if (this.p2Choice === 'scissors') {
-        return 2;
-      }
-      return 0;
-    }
-
-    if (this.p1Choice === 'scissors') {
-      if (this.p2Choice === 'paper') {
-        return 1;
-      }
-      if (this.p2Choice === 'rock') {
-        return 2;
-      }
-      return 0;
-    }
-  }
-};
-
 $(document).ready(function() {
   // Initialize Firebase
   var config = {
@@ -83,7 +42,36 @@ $(document).ready(function() {
     playerTwo: null,
     signedInAs: null,
     isSignedIn: false,
-    gameMachine: new Game()
+    declareWinner: function(p1Choice, p2Choice) {
+      if (p1Choice === 'rock') {
+        if (p2Choice === 'scissors') {
+          return 1;
+        }
+        if (p2Choice === 'paper') {
+          return 2;
+        }
+        return 0;
+      }
+      if (p1Choice === 'paper') {
+        if (p2Choice === 'rock') {
+          return 1;
+        }
+        if (p2Choice === 'scissors') {
+          return 2;
+        }
+        return 0;
+      }
+
+      if (p1Choice === 'scissors') {
+        if (p2Choice === 'paper') {
+          return 1;
+        }
+        if (p2Choice === 'rock') {
+          return 2;
+        }
+        return 0;
+      }
+    }
   };
 
   // Event bindings
@@ -112,6 +100,18 @@ $(document).ready(function() {
       $playerTwoTitleDiv.text('Waiting for a new player');
     }
     toggleSignInBar();
+  });
+
+  database.ref('game/').on('value', function(snap) {
+    if (snap.child('playerOne/choice').exists() && snap.child('playerTwo/choice').exists()) {
+      let p1Choice = snap.child('playerOne/choice').val();
+      let p2Choice = snap.child('playerTwo/choice').val();
+      writeGameResult(p1Choice, p2Choice);
+    } else if (snap.child('playerOne/choice').exists() && !snap.child('playerTwo/choice').exists()) {
+      writePlayerOneGameMove(snap.child('playerOne/choice').val());
+    } else if (snap.child('playerTwo/choice').exists() && !snap.child('playerOne/choice').exists()) {
+      writePlayerTwoGameMove(snap.child('playerTwo/choice').val());
+    }
   });
 
   function signIn() {
@@ -165,11 +165,13 @@ $(document).ready(function() {
   function activatePlayerOne() {
     game.isSignedIn = true;
     game.signedInAs = 1;
+    toggleSignInBar();
   }
 
   function activatePlayerTwo() {
     game.isSignedIn = true;
     game.signedInAs = 2;
+    toggleSignInBar();
   }
 
   // Prompts players for their move
@@ -182,28 +184,77 @@ $(document).ready(function() {
   }
 
   function submitPlayerOneMove(e) {
-    database.ref('game/playerOneChoice').onDisconnect().remove();
-    database
-      .ref('game/playerOneChoice')
-      .set({ move: e.target.dataset.choice })
-      .then(function() {
-        $playerOneGameArea.text(`You chose ${e.target.dataset.choice}`);
-      })
-      .catch(function(error) {
-        console.error('Error writing to database: ', error);
-      });
+    database.ref('game/playerOne').onDisconnect().remove();
+    database.ref('game/playerOne').set({ choice: e.target.dataset.choice }).catch(function(error) {
+      console.error('Error writing to database: ', error);
+    });
   }
+
   function submitPlayerTwoMove(e) {
-    database.ref('game/playerTwoChoice').onDisconnect().remove();
-    database
-      .ref('game/playerTwoChoice')
-      .set({ move: e.target.dataset.choice })
-      .then(function() {
-        $playerTwoGameArea.text(`You chose ${e.target.dataset.choice}`);
-      })
-      .catch(function(error) {
-        console.error('Error writing to database: ', error);
-      });
+    database.ref('game/playerTwo').onDisconnect().remove();
+    database.ref('game/playerTwo').set({ choice: e.target.dataset.choice }).catch(function(error) {
+      console.error('Error writing to database: ', error);
+    });
+  }
+
+  function writeGameResult(p1Choice, p2Choice) {
+    let winner = game.declareWinner(p1Choice, p2Choice);
+
+    let $p1 = $('<h4></h4>').text(`Player one chose ${p1Choice}.`);
+    let $p2 = $('<h4></h4>').text(`Player two chose ${p2Choice}.`);
+
+    $playerOneGameArea.empty();
+    $playerTwoGameArea.empty();
+
+    $playerOneGameArea.append([$p1, $('<h3></h3>').text(`Player ${winner} wins!`)]);
+    $playerTwoGameArea.append([$p2, $('<h3></h3>').text(`Player ${winner} wins!`)]);
+
+    $playerOneGameArea.show();
+    $playerTwoGameArea.show();
+  }
+
+  function writePlayerOneGameMove(choice) {
+    $playerOneGameArea.empty();
+    if (game.signedInAs === 1) {
+      $playerOneGameArea.append($('<h4></h4>').text(`You chose ${choice}`));
+      $playerTwoGameArea.empty();
+      $playerTwoGameArea.append($('<h4></h4>').text("Waiting for player two's choice"));
+      $playerTwoGameArea.fadeIn();
+    } else if (game.signedInAs === 2) {
+      $playerOneGameArea.append($('<h4></h4>').text('Player one ready! Make your move!'));
+    } else {
+      if (game.playerOne && game.playerTwo) {
+        $playerOneGameArea.append($('<h4></h4>').text(`Player one chose ${choice}`));
+        $playerTwoGameArea.empty();
+        $playerTwoGameArea.append($('<h4></h4>').text("Waiting for player two's choice"));
+        $playerTwoGameArea.fadeIn();
+      } else {
+        $playerOneGameArea.append($('<h4></h4>').text('Player one ready! Join now and play!'));
+      }
+    }
+    $playerOneGameArea.fadeIn();
+  }
+
+  function writePlayerTwoGameMove(choice) {
+    $playerTwoGameArea.empty();
+    if (game.signedInAs === 2) {
+      $playerTwoGameArea.append($('<h4></h4>').text(`You chose ${choice}`));
+      $playerOneGameArea.empty();
+      $playerOneGameArea.append($('<h4></h4>').text("Waiting for player one's choice"));
+      $playerOneGameArea.fadeIn();
+    } else if (game.signedInAs === 1) {
+      $playerTwoGameArea.append($('<h4></h4>').text('Player two ready! Make your move!'));
+    } else {
+      if (game.playerOne && game.playerTwo) {
+        $playerTwoGameArea.append($('<h4></h4>').text(`Player two chose ${choice}`));
+        $playerOneGameArea.empty();
+        $playerOneGameArea.append($('<h4></h4>').text("Waiting for player one's choice"));
+        $playerOneGameArea.fadeIn();
+      } else {
+        $playerTwoGameArea.append($('<h4></h4>').text('Player two ready! Join now and play!'));
+      }
+    }
+    $playerTwoGameArea.fadeIn();
   }
 
   // Hide game areas to start
