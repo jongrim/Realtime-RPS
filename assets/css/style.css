@@ -1,4 +1,33 @@
+html, body {
+  height: 100%;
+}
+
+body {
+  background-image: url('../images/topography.png');
+}
+
 .jumbotron {
   background-color: #28576E;
   color: white;
+}
+
+.container-fluid {
+  height: 100%;
+}
+
+#outerRow {
+  height: 100%;
+}
+
+#chatColumn {
+  height: 100%;
+}
+
+#chatPanel {
+  height: 97%;
+}
+
+.moveToBottom {
+  position: absolute;
+  top: 95%;
 }
