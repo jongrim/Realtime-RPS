@@ -38,17 +38,20 @@
           <div class="jumbotron">
             <h1 class="text-center">Rock Paper Scissors</h1>
           </div>
+
+          <!-- Player one area -->
           <div class="col-xs-6 col-md-5">
             <div class="panel panel-default">
               <div class="panel-heading">
                 <h3 class="panel-title" id="playerOneTitle">Player One</h3>
               </div>
             </div>
-            <div class="panel panel-body">
+            <div class="panel panel-body" id="playerOneGameArea">
+              <h4 class="text-muted">Choose your move</h4>
               <div class="btn-group" role="group" aria-label="player-one-choices">
-                <button class="btn btn-default">Rock</button>
-                <button class="btn btn-default">Paper</button>
-                <button class="btn btn-default">Scissors</button>
+                <button class="btn btn-default" data-choice="rock" id="p1-rock">Rock</button>
+                <button class="btn btn-default" data-choice="paper" id="p1-paper">Paper</button>
+                <button class="btn btn-default" data-choice="scissors" id="p1-scissors">Scissors</button>
               </div>
             </div>
           </div>
@@ -57,17 +60,19 @@
             <!-- TODO add class to hide div with media break -->
           </div>
 
+          <!-- Player two area -->
           <div class="col-xs-6 col-md-5">
             <div class="panel panel-default">
               <div class="panel-heading">
                 <h3 class="panel-title" id="playerTwoTitle">Player Two</h3>
               </div>
             </div>
-            <div class="panel panel-body">
+            <div class="panel panel-body" id="playerTwoGameArea">
+              <h4 class="text-muted">Choose your move</h4>
               <div class="btn-group" role="group" aria-label="player-two-choices">
-                <button class="btn btn-default">Rock</button>
-                <button class="btn btn-default">Paper</button>
-                <button class="btn btn-default">Scissors</button>
+                <button class="btn btn-default" data-choice="rock" id="p2-rock">Rock</button>
+                <button class="btn btn-default" data-choice="paper" id="p2-paper">Paper</button>
+                <button class="btn btn-default" data-choice="scissors" id="p2-scissors">Scissors</button>
               </div>
             </div>
           </div>
