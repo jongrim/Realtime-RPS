@@ -45,22 +45,21 @@ $(document).ready(function() {
 
   // Runs on page load and when any data below 'players/' changes
   database.ref('players/').on('value', function(snap) {
-    if (!snap.exists()) {
-      // no data set yet so just return
-      return;
-    }
     if (snap.child('playerOne').exists()) {
-      console.log('hello');
       game.playerOne = new Player(snap.child('playerOne/username').val());
       $playerOneTitleDiv.text(game.playerOne.username);
+    } else {
+      game.playerOne = null;
+      $playerOneTitleDiv.text('Waiting for a new player');
     }
     if (snap.child('playerTwo').exists()) {
       game.playerTwo = new Player(snap.child('playerTwo/username').val());
       $playerTwoTitleDiv.text(game.playerTwo.username);
+    } else {
+      game.playerTwo = null;
+      $playerTwoTitleDiv.text('Waiting for a new player');
     }
-    if (game.playerOne && game.playerTwo) {
-      $signInRow.hide();
-    }
+    toggleSignInBar();
   });
 
   function signIn() {
@@ -70,18 +69,29 @@ $(document).ready(function() {
     }
     if (!game.playerOne) {
       // sign in as player one
+      isSignedIn = true;
+      database.ref('players/playerOne').onDisconnect().remove();
       database.ref('players/playerOne').set({
         username: username
       });
-      $signInRow.fadeToggle();
     } else if (!game.playerTwo) {
       // sign in as player two
+      isSignedIn = true;
+      database.ref('players/playerTwo').onDisconnect().remove();
       database.ref('players/playerTwo').set({
         username: username
       });
-      $signInRow.fadeToggle();
     } else {
       alert('Game is full!');
+    }
+  }
+
+  function toggleSignInBar() {
+    if (isSignedIn || (game.playerOne && game.playerTwo)) {
+      $signInRow.fadeOut();
+    }
+    if (!isSignedIn && !(game.playerOne && game.playerTwo)) {
+      $signInRow.fadeIn();
     }
   }
 });
