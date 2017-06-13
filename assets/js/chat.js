@@ -6,10 +6,6 @@ var Chat = function(opts) {
 
   this.mesRef = firebaseModule.database.ref('messages');
   this.messages = [];
-  this.mesRef.on('value', function(snap) {
-    console.log(snap.val());
-    this.messages = snap.val();
-  });
 
   this.$chatSubmitBtn.on('click', this.postChatMessage.bind(this));
 };
@@ -34,8 +30,12 @@ Chat.prototype.enableChat = function() {
 };
 
 Chat.prototype.displayMessages = function() {
-  this.messages.forEach(function(msg) {
-    console.log(msg.message);
-    this.postChatMessage(msg.message);
+  let self = this;
+  self.mesRef.on('value', function(snap) {
+    console.log(snap.val());
+    snap.forEach(function(childSnap) {
+      self.messages.push(childSnap.val().message);
+      self.postChatMessage(childSnap.val().message);
+    });
   });
 };
