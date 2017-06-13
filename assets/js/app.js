@@ -40,8 +40,11 @@ $(document).ready(function() {
   // In-memory references to players and Game
   var game = {
     key: null,
+    finished: null,
     playerOne: null,
+    playerOneChoice: null,
     playerTwo: null,
+    playerTwoChoice: null,
     signedInAs: null,
     isSignedIn: false,
     declareWinner: function(p1Choice, p2Choice) {
@@ -88,25 +91,12 @@ $(document).ready(function() {
   /*
    * Database value listeners
    */
-  database.ref('players/').on('value', function(snap) {
-    if (snap.child('playerOne').exists()) {
-      game.playerOne = new Player(snap.child('playerOne/username').val());
-      $playerOneTitleDiv.text(game.playerOne.username);
-    } else {
-      game.playerOne = null;
-      $playerOneTitleDiv.text('Waiting for a new player');
-    }
-    if (snap.child('playerTwo').exists()) {
-      game.playerTwo = new Player(snap.child('playerTwo/username').val());
-      $playerTwoTitleDiv.text(game.playerTwo.username);
-    } else {
-      game.playerTwo = null;
-      $playerTwoTitleDiv.text('Waiting for a new player');
-    }
-    toggleSignInBar();
-  });
 
+  // Watch for new game
   database.ref('game/').limitToLast(1).on('value', function(snap) {
+    if (game.finished) {
+      //
+    }
     if (!game.key) {
       if (snap.val()) {
         let key = '';
@@ -115,31 +105,70 @@ $(document).ready(function() {
         }
         if (!snap.child(key + '/finished').exists()) {
           game.key = key;
+          setDatabaseListeners();
           console.log('Joined the game: ', game.key);
+        } else {
+          setGameKey();
         }
       } else {
         console.log('Nothing in the snapshot!');
         return;
       }
     }
-
-    if (snap.child(game.key + '/playerOne/choice').exists() && snap.child(game.key + '/playerTwo/choice').exists()) {
-      let p1Choice = snap.child(game.key + '/playerOne/choice').val();
-      let p2Choice = snap.child(game.key + '/playerTwo/choice').val();
-      writeGameResult(p1Choice, p2Choice);
-    } else if (
-      snap.child(game.key + '/playerOne/choice').exists() &&
-      !snap.child(game.key + '/playerTwo/choice').exists()
-    ) {
-      writePlayerOneGameMove(snap.child(game.key + '/playerOne/choice').val());
-    } else if (
-      snap.child(game.key + '/playerTwo/choice').exists() &&
-      !snap.child(game.key + '/playerOne/choice').exists()
-    ) {
-      writePlayerTwoGameMove(snap.child(game.key + '/playerTwo/choice').val());
-      game.key = null;
-    }
   });
+
+  function setDatabaseListeners() {
+    // Watch for players joining
+    database.ref(`game/${game.key}/players/`).on('value', function(snap) {
+      if (snap.child('playerOne').exists()) {
+        game.playerOne = new Player(snap.child('playerOne/username').val());
+        $playerOneTitleDiv.text(game.playerOne.username);
+      } else {
+        game.playerOne = null;
+        $playerOneTitleDiv.text('Waiting for a new player');
+      }
+      if (snap.child('playerTwo').exists()) {
+        game.playerTwo = new Player(snap.child('playerTwo/username').val());
+        $playerTwoTitleDiv.text(game.playerTwo.username);
+      } else {
+        game.playerTwo = null;
+        $playerTwoTitleDiv.text('Waiting for a new player');
+      }
+      toggleSignInBar();
+    });
+
+    // Watch for player one moves
+    database.ref(`game/${game.key}/playerOne/choice`).on('value', function(snap) {
+      game.playerOneChoice = snap.val();
+      evaluateTurns();
+    });
+
+    // Watch for player two moves
+    database.ref(`game/${game.key}/playerTwo/choice`).on('value', function(snap) {
+      game.playerTwoChoice = snap.val();
+      evaluateTurns();
+    });
+  }
+
+  // if (
+  //   snap.child(`game/${game.key}/playerOne/choice`).exists() &&
+  //   snap.child(`game/${game.key}/playerTwo/choice`).exists()
+  // ) {
+  //   let p1Choice = snap.child(game.key + '/playerOne/choice').val();
+  //   let p2Choice = snap.child(game.key + '/playerTwo/choice').val();
+  //   writeGameResult(p1Choice, p2Choice);
+  // } else if (
+  //   snap.child(game.key + '/playerOne/choice').exists() &&
+  //   !snap.child(game.key + '/playerTwo/choice').exists()
+  // ) {
+  //   writePlayerOneGameMove(snap.child(game.key + '/playerOne/choice').val());
+  // } else if (
+  //   snap.child(game.key + '/playerTwo/choice').exists() &&
+  //   !snap.child(game.key + '/playerOne/choice').exists()
+  // ) {
+  //   writePlayerTwoGameMove(snap.child(game.key + '/playerTwo/choice').val());
+  //   game.key = null;
+  // }
 
   function signIn(e) {
     e.preventDefault();
@@ -150,12 +179,10 @@ $(document).ready(function() {
     }
     if (!game.playerOne) {
       // sign in as player one
-      database.ref('players/playerOne').onDisconnect().remove();
+      database.ref(`game/${game.key}/players/playerOne`).onDisconnect().remove();
       database
-        .ref('players/playerOne')
-        .set({
-          username: username
-        })
+        .ref(`game/${game.key}/players/playerOne`)
+        .set({ username: username })
         .then(activatePlayerOne)
         .then(makePlayerOneMove)
         .catch(function(error) {
@@ -163,12 +190,10 @@ $(document).ready(function() {
         });
     } else if (!game.playerTwo) {
       // sign in as player two
-      database.ref('players/playerTwo').onDisconnect().remove();
+      database.ref(`game/${game.key}/players/playerTwo`).onDisconnect().remove();
       database
-        .ref('players/playerTwo')
-        .set({
-          username: username
-        })
+        .ref(`game/${game.key}/players/playerTwo`)
+        .set({ username: username })
         .then(activatePlayerTwo)
         .then(makePlayerTwoMove)
         .catch(function(error) {
@@ -177,6 +202,45 @@ $(document).ready(function() {
     } else {
       alert('Game is full!');
     }
+  }
+
+  function setGameKey() {
+    if (!game.key) {
+      console.info('No game running, starting a new one');
+      let gameRef = database.ref('game').push();
+      game.key = gameRef.key;
+      console.info('Started game: ', game.key);
+      gameRef
+        .set({
+          created: true
+        })
+        .then(setDatabaseListeners)
+        .catch(function(error) {
+          console.log('Error writing to database: ', error);
+        });
+    }
+  }
+
+  function submitPlayerOneMove(e) {
+    if (!game.key) {
+      console.info('No game running, starting a new one');
+      game.key = database.ref('game').push().key;
+    }
+    database.ref('game/' + game.key).onDisconnect().set({ finished: true });
+    database.ref('game/' + game.key + '/playerOne').set({ choice: e.target.dataset.choice }).catch(function(error) {
+      console.error('Error writing to database: ', error);
+    });
+  }
+
+  function submitPlayerTwoMove(e) {
+    if (!game.key) {
+      console.info('No game running, starting a new one');
+      game.key = database.ref('game').push().key;
+    }
+    database.ref('game/' + game.key).onDisconnect().set({ finished: true });
+    database.ref('game/' + game.key + '/playerTwo').set({ choice: e.target.dataset.choice }).catch(function(error) {
+      console.error('Error writing to database: ', error);
+    });
   }
 
   function toggleSignInBar() {
@@ -210,26 +274,14 @@ $(document).ready(function() {
     $playerTwoGameArea.slideDown();
   }
 
-  function submitPlayerOneMove(e) {
-    if (!game.key) {
-      console.info('No game running, starting a new one');
-      game.key = database.ref('game').push().key;
+  function evaluateTurns() {
+    if (game.playerOneChoice && game.playerTwoChoice) {
+      writeGameResult(game.playerOneChoice, game.playerTwoChoice);
+    } else if (game.playerOneChoice && !game.playerTwoChoice) {
+      writePlayerOneGameMove(game.playerOneChoice);
+    } else if (game.playerTwoChoice && !game.playerOneChoice) {
+      writePlayerTwoGameMove(game.playerTwoChoice);
     }
-    database.ref('game/' + game.key).onDisconnect().set({ finished: true });
-    database.ref('game/' + game.key + '/playerOne').set({ choice: e.target.dataset.choice }).catch(function(error) {
-      console.error('Error writing to database: ', error);
-    });
-  }
-
-  function submitPlayerTwoMove(e) {
-    if (!game.key) {
-      console.info('No game running, starting a new one');
-      game.key = database.ref('game').push().key;
-    }
-    database.ref('game/' + game.key).onDisconnect().set({ finished: true });
-    database.ref('game/' + game.key + '/playerTwo').set({ choice: e.target.dataset.choice }).catch(function(error) {
-      console.error('Error writing to database: ', error);
-    });
   }
 
   function writeGameResult(p1Choice, p2Choice) {
