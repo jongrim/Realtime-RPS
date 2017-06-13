@@ -27,10 +27,11 @@ $(document).ready(function() {
   var $signInForm = $('#signInForm');
   var $navbar = $('#navbar');
 
-  // DOM cache - chat window
-  var $chatMessageBody = $('#chatBody');
-  var $chatNewMessage = $('#chatMessage');
-  var $chatSubmitBtn = $('#chatSubmit');
+  var chat = new Chat({ chatBody: '#chatBody', chatMessage: '#chatMessage', chatSubmitBtn: '#chatSubmit' });
+
+  // var $chatMessageBody = $('#chatBody');
+  // var $chatNewMessage = $('#chatMessage');
+  // var $chatSubmitBtn = $('#chatSubmit');
 
   // Constructor function for players
   function Player(username) {
@@ -150,26 +151,6 @@ $(document).ready(function() {
     });
   }
 
-  // if (
-  //   snap.child(`game/${game.key}/playerOne/choice`).exists() &&
-  //   snap.child(`game/${game.key}/playerTwo/choice`).exists()
-  // ) {
-  //   let p1Choice = snap.child(game.key + '/playerOne/choice').val();
-  //   let p2Choice = snap.child(game.key + '/playerTwo/choice').val();
-  //   writeGameResult(p1Choice, p2Choice);
-  // } else if (
-  //   snap.child(game.key + '/playerOne/choice').exists() &&
-  //   !snap.child(game.key + '/playerTwo/choice').exists()
-  // ) {
-  //   writePlayerOneGameMove(snap.child(game.key + '/playerOne/choice').val());
-  // } else if (
-  //   snap.child(game.key + '/playerTwo/choice').exists() &&
-  //   !snap.child(game.key + '/playerOne/choice').exists()
-  // ) {
-  //   writePlayerTwoGameMove(snap.child(game.key + '/playerTwo/choice').val());
-  //   game.key = null;
-  // }
-
   function signIn(e) {
     e.preventDefault();
     var username = $newUserName.val().trim();
@@ -222,10 +203,6 @@ $(document).ready(function() {
   }
 
   function submitPlayerOneMove(e) {
-    if (!game.key) {
-      console.info('No game running, starting a new one');
-      game.key = database.ref('game').push().key;
-    }
     database.ref('game/' + game.key).onDisconnect().set({ finished: true });
     database.ref('game/' + game.key + '/playerOne').set({ choice: e.target.dataset.choice }).catch(function(error) {
       console.error('Error writing to database: ', error);
@@ -233,10 +210,6 @@ $(document).ready(function() {
   }
 
   function submitPlayerTwoMove(e) {
-    if (!game.key) {
-      console.info('No game running, starting a new one');
-      game.key = database.ref('game').push().key;
-    }
     database.ref('game/' + game.key).onDisconnect().set({ finished: true });
     database.ref('game/' + game.key + '/playerTwo').set({ choice: e.target.dataset.choice }).catch(function(error) {
       console.error('Error writing to database: ', error);
