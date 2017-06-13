@@ -11,23 +11,6 @@ body {
   color: white;
 }
 
-.container-fluid {
-  height: 100%;
-}
-
-#outerRow {
-  height: 100%;
-}
-
-#chatColumn {
-  height: 100%;
-}
-
-#chatPanel {
-  height: 97%;
-}
-
-.moveToBottom {
-  position: absolute;
-  top: 95%;
+.navbar {
+  margin-bottom: 0;
 }

@@ -29,86 +29,96 @@
 
 <body>
 
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <!-- Brand and toggle get grouped for better mobile display -->
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+        <a class="navbar-brand" href="#">RPS</a>
+      </div>
+
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="collapse navbar-collapse" id="navbar">
+        <form class="navbar-form navbar-right" id="signInForm">
+          <div class="form-group">
+            <input type="text" class="form-control" id="newUserName" placeholder="Enter username" required>">
+          </div>
+          <button type="submit" class="btn btn-default" id="newUserSubmit">Join</button>
+        </form>
+      </div>
+      <!-- /.navbar-collapse -->
+    </div>
+    <!-- /.container-fluid -->
+  </nav>
+
+  <div class="jumbotron">
+    <h1 class="text-center">Rock Paper Scissors</h1>
+  </div>
 
   <div class="container-fluid">
-    <div class="row" id="outerRow">
+    <div class="row">
 
-      <div class="col-md-8">
-        <div class="row">
-          <div class="jumbotron">
-            <h1 class="text-center">Rock Paper Scissors</h1>
-          </div>
-
-          <!-- Player one area -->
-          <div class="col-xs-6 col-md-5">
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <h3 class="panel-title" id="playerOneTitle">Player One</h3>
-              </div>
-            </div>
-            <div class="panel panel-body" id="playerOneGameArea">
-              <h4 class="text-muted">Choose your move</h4>
-              <div class="btn-group" role="group" aria-label="player-one-choices">
-                <button class="btn btn-default" data-choice="rock" id="p1-rock">Rock</button>
-                <button class="btn btn-default" data-choice="paper" id="p1-paper">Paper</button>
-                <button class="btn btn-default" data-choice="scissors" id="p1-scissors">Scissors</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-md-2">
-            <!-- TODO add class to hide div with media break -->
-          </div>
-
-          <!-- Player two area -->
-          <div class="col-xs-6 col-md-5">
-            <div class="panel panel-default">
-              <div class="panel-heading">
-                <h3 class="panel-title" id="playerTwoTitle">Player Two</h3>
-              </div>
-            </div>
-            <div class="panel panel-body" id="playerTwoGameArea">
-              <h4 class="text-muted">Choose your move</h4>
-              <div class="btn-group" role="group" aria-label="player-two-choices">
-                <button class="btn btn-default" data-choice="rock" id="p2-rock">Rock</button>
-                <button class="btn btn-default" data-choice="paper" id="p2-paper">Paper</button>
-                <button class="btn btn-default" data-choice="scissors" id="p2-scissors">Scissors</button>
-              </div>
-            </div>
+      <!-- Player one area -->
+      <div class="col-xs-12 col-md-5">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title" id="playerOneTitle">Player One</h3>
           </div>
         </div>
-        <!-- End player row -->
-
-        <div class="row" id='signInRow'>
-          <div class="col-xs-12">
-            <div class="input-group">
-              <!--<label for="newUser">Sign In</label>-->
-              <input type="text" class="form-control" id="newUserName" placeholder="Enter username" required>
-              <span class="input-group-btn">
-                <button class="btn btn-primary" id="newUserSubmit">Join Game</button>
-              </span>
-            </div>
-
+        <div class="panel panel-body" id="playerOneGameArea">
+          <h4 class="text-muted">Choose your move</h4>
+          <div class="btn-group" role="group" aria-label="player-one-choices">
+            <button class="btn btn-default" data-choice="rock" id="p1-rock">Rock</button>
+            <button class="btn btn-default" data-choice="paper" id="p1-paper">Paper</button>
+            <button class="btn btn-default" data-choice="scissors" id="p1-scissors">Scissors</button>
           </div>
         </div>
-
       </div>
-      <!-- End main content column -->
 
-      <div class="col-md-4" id="chatColumn">
+      <div class="col-md-2">
+        <!-- TODO add class to hide div with media break -->
+      </div>
+
+      <!-- Player two area -->
+      <div class="col-xs-12 col-md-5">
+        <div class="panel panel-default">
+          <div class="panel-heading">
+            <h3 class="panel-title" id="playerTwoTitle">Player Two</h3>
+          </div>
+        </div>
+        <div class="panel panel-body" id="playerTwoGameArea">
+          <h4 class="text-muted">Choose your move</h4>
+          <div class="btn-group" role="group" aria-label="player-two-choices">
+            <button class="btn btn-default" data-choice="rock" id="p2-rock">Rock</button>
+            <button class="btn btn-default" data-choice="paper" id="p2-paper">Paper</button>
+            <button class="btn btn-default" data-choice="scissors" id="p2-scissors">Scissors</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- End player row -->
+    <div class="row">
+      <div class="col-xs-12 col-md-8 col-md-offset-2" id="chatColumn">
         <div class="panel panel-default" id="chatPanel">
-          <button type="button" class="close pull-left" arial-label="Close"><span aria-hidden="true">&times;</span></button>
-          <div class="panel-body" id="chatBody"></div>
-          <div class="input-group moveToBottom">
+          <!--<button type="button" class="close pull-left" arial-label="Close"><span aria-hidden="true">&times;</span></button>-->
+          <div class="input-group">
             <input type="text" class="form-control" placeholder="Sign in to send messages" id="chatMessage">
             <span class="input-group-btn">
               <button class="btn btn-primary disabled" id="chatSubmit">Send</button>
+              <div class="panel-body" id="chatBody"></div>
             </span>
           </div>
         </div>
       </div>
-
     </div>
+
+
+
 
   </div>
   <!-- End container -->

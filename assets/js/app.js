@@ -24,7 +24,8 @@ $(document).ready(function() {
   // DOM cache - sign in
   var $newUserSubmitBtn = $('#newUserSubmit');
   var $newUserName = $('#newUserName');
-  var $signInRow = $('#signInRow');
+  var $signInForm = $('#signInForm');
+  var $navbar = $('#navbar');
 
   // DOM cache - chat window
   var $chatMessageBody = $('#chatBody');
@@ -106,8 +107,6 @@ $(document).ready(function() {
   });
 
   database.ref('game/').limitToLast(1).on('value', function(snap) {
-    console.log(snap.val());
-
     if (!game.key) {
       if (snap.val()) {
         let key = '';
@@ -125,7 +124,6 @@ $(document).ready(function() {
     }
 
     if (snap.child(game.key + '/playerOne/choice').exists() && snap.child(game.key + '/playerTwo/choice').exists()) {
-      console.info('both choices made');
       let p1Choice = snap.child(game.key + '/playerOne/choice').val();
       let p2Choice = snap.child(game.key + '/playerTwo/choice').val();
       writeGameResult(p1Choice, p2Choice);
@@ -133,26 +131,25 @@ $(document).ready(function() {
       snap.child(game.key + '/playerOne/choice').exists() &&
       !snap.child(game.key + '/playerTwo/choice').exists()
     ) {
-      console.info('Player one choice made');
       writePlayerOneGameMove(snap.child(game.key + '/playerOne/choice').val());
     } else if (
       snap.child(game.key + '/playerTwo/choice').exists() &&
       !snap.child(game.key + '/playerOne/choice').exists()
     ) {
-      console.info('player two choice made');
       writePlayerTwoGameMove(snap.child(game.key + '/playerTwo/choice').val());
       game.key = null;
     }
   });
 
-  function signIn() {
+  function signIn(e) {
+    e.preventDefault();
     var username = $newUserName.val().trim();
+    $navbar.html($('<p></p>').addClass('navbar-text').addClass('pull-right').text(`Signed in as ${username}`));
     if (username.length === 0) {
       return;
     }
     if (!game.playerOne) {
       // sign in as player one
-
       database.ref('players/playerOne').onDisconnect().remove();
       database
         .ref('players/playerOne')
@@ -166,7 +163,6 @@ $(document).ready(function() {
         });
     } else if (!game.playerTwo) {
       // sign in as player two
-
       database.ref('players/playerTwo').onDisconnect().remove();
       database
         .ref('players/playerTwo')
@@ -185,10 +181,10 @@ $(document).ready(function() {
 
   function toggleSignInBar() {
     if (game.isSignedIn || (game.playerOne && game.playerTwo)) {
-      $signInRow.fadeOut();
+      $signInForm.fadeOut();
     }
     if (!game.isSignedIn && !(game.playerOne && game.playerTwo)) {
-      $signInRow.fadeIn();
+      $signInForm.fadeIn();
     }
   }
 
