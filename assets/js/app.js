@@ -18,8 +18,10 @@ $(document).ready(function() {
   var $signInForm = $('#signInForm');
   var $navbar = $('#navbar');
 
+  // Instantiate chat module, load messages, and listen for new ones
   var chat = new Chat({ chatBody: '#chatBody', chatMessage: '#chatMessage', chatBtn: '#chatSubmit' });
-  chat.displayMessages();
+  // chat.loadMessages();
+  chat.listenForMessages();
 
   // Constructor function for players
   function Player(username) {
@@ -145,7 +147,14 @@ $(document).ready(function() {
     if (username.length === 0) {
       return;
     }
-    $navbar.html($('<p></p>').addClass('navbar-text').addClass('pull-right').text(`Signed in as ${username}`));
+    $navbar.html(
+      $('<p></p>')
+        .addClass('navbar-text')
+        .addClass('pull-right')
+        .attr('data-username', username)
+        .attr('id', 'username')
+        .text(`Signed in as ${username}`)
+    );
     chat.enableChat();
     if (!game.playerOne) {
       // sign in as player one
@@ -310,3 +319,5 @@ $(document).ready(function() {
   $playerOneGameArea.hide();
   $playerTwoGameArea.hide();
 });
+
+// TODO: Find way to improve game reloading experience

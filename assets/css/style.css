@@ -14,3 +14,11 @@ body {
 .navbar {
   margin-bottom: 0;
 }
+
+.list-group-item {
+  border: none;
+}
+
+#chatSubmit {
+  left: 1px;
+}
