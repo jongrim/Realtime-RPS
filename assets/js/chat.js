@@ -17,6 +17,7 @@ Chat.prototype.postChatMessage = function(msg, user) {
 
 Chat.prototype.submitChatMessage = function() {
   let message = this.$chatMessage.val();
+  this.$chatMessage.val('');
   let username = $('#username').attr('data-username');
   if (message.length < 1) {
     return;
@@ -27,6 +28,7 @@ Chat.prototype.submitChatMessage = function() {
 
 Chat.prototype.enableChat = function() {
   this.$chatSubmitBtn.removeClass('disabled');
+  this.$chatMessage.attr('placeholder', 'Send a message');
 };
 
 Chat.prototype.listenForMessages = function() {
