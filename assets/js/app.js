@@ -2,16 +2,7 @@
 
 $(document).ready(function() {
   // Initialize Firebase
-  var config = {
-    apiKey: 'AIzaSyDqKoNT1rpDeSl2QVu6sK_YGMVfTzohops',
-    authDomain: 'realtime-rps.firebaseapp.com',
-    databaseURL: 'https://realtime-rps.firebaseio.com',
-    projectId: 'realtime-rps',
-    storageBucket: 'realtime-rps.appspot.com',
-    messagingSenderId: '603566803686'
-  };
-  firebase.initializeApp(config);
-  var database = firebase.database();
+  var database = firebaseModule.database;
 
   // DOM cache - player pieces
   var $playerOneTitleDiv = $('#playerOneTitle');
@@ -27,11 +18,8 @@ $(document).ready(function() {
   var $signInForm = $('#signInForm');
   var $navbar = $('#navbar');
 
-  var chat = new Chat({ chatBody: '#chatBody', chatMessage: '#chatMessage', chatSubmitBtn: '#chatSubmit' });
-
-  // var $chatMessageBody = $('#chatBody');
-  // var $chatNewMessage = $('#chatMessage');
-  // var $chatSubmitBtn = $('#chatSubmit');
+  var chat = new Chat({ chatBody: '#chatBody', chatMessage: '#chatMessage', chatBtn: '#chatSubmit' });
+  chat.displayMessages();
 
   // Constructor function for players
   function Player(username) {
@@ -154,10 +142,11 @@ $(document).ready(function() {
   function signIn(e) {
     e.preventDefault();
     var username = $newUserName.val().trim();
-    $navbar.html($('<p></p>').addClass('navbar-text').addClass('pull-right').text(`Signed in as ${username}`));
     if (username.length === 0) {
       return;
     }
+    $navbar.html($('<p></p>').addClass('navbar-text').addClass('pull-right').text(`Signed in as ${username}`));
+    chat.enableChat();
     if (!game.playerOne) {
       // sign in as player one
       database.ref(`game/${game.key}/players/playerOne`).onDisconnect().remove();

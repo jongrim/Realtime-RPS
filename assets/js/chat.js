@@ -4,13 +4,38 @@ var Chat = function(opts) {
   this.$chatMessage = $(opts.chatMessage);
   this.$chatSubmitBtn = $(opts.chatBtn);
 
-  this.$chatSubmitBtn.on('click', this.postChatMessage);
+  this.mesRef = firebaseModule.database.ref('messages');
+  this.messages = [];
+  this.mesRef.on('value', function(snap) {
+    console.log(snap.val());
+    this.messages = snap.val();
+  });
+
+  this.$chatSubmitBtn.on('click', this.postChatMessage.bind(this));
 };
 
-Chat.prototype.postChatMessage = function() {
-  this.$chatMessageBody.append($('<p></p>').text(this.$chatMessage.text));
+Chat.prototype.postChatMessage = function(msg) {
+  let message = msg;
+  this.$chatMessageBody.append($('<li></li>').text(message).addClass('list-group-item'));
+};
+
+Chat.prototype.submitChatMessage = function() {
+  let message = this.$chatMessage.val();
+  if (message.length < 1) {
+    return;
+  }
+  let messageRef = this.mesRef.push();
+  messageRef.set({ message: message }).then(this.postChatMessage(message));
 };
 
 Chat.prototype.enableChat = function() {
+  console.log('enabling chat');
   this.$chatSubmitBtn.removeClass('disabled');
+};
+
+Chat.prototype.displayMessages = function() {
+  this.messages.forEach(function(msg) {
+    console.log(msg.message);
+    this.postChatMessage(msg.message);
+  });
 };
