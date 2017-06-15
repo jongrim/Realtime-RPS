@@ -10,6 +10,7 @@ var firebaseModule = (function() {
   firebase.initializeApp(config);
 
   var database = firebase.database();
+
   return {
     database: database
   };

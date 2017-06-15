@@ -1,27 +1,20 @@
 'use strict';
 
-$(document).ready(function() {
+var App = (function() {
+  var $playerOneTitleDiv,
+    $playerTwoTitleDiv,
+    $playerOneGameArea,
+    $playerTwoGameArea,
+    $playerOneGameButtons,
+    $playerTwoGameButtons,
+    $newUserSubmitBtn,
+    $newUserName,
+    $signInForm,
+    $navbar,
+    chat;
+
   // Initialize Firebase
   var database = firebaseModule.database;
-
-  // DOM cache - player pieces
-  var $playerOneTitleDiv = $('#playerOneTitle');
-  var $playerTwoTitleDiv = $('#playerTwoTitle');
-  var $playerOneGameArea = $('#playerOneGameArea');
-  var $playerTwoGameArea = $('#playerTwoGameArea');
-  var $playerOneGameButtons = [$('#p1-rock'), $('#p1-paper'), $('#p1-scissors')];
-  var $playerTwoGameButtons = [$('#p2-rock'), $('#p2-paper'), $('#p2-scissors')];
-
-  // DOM cache - sign in
-  var $newUserSubmitBtn = $('#newUserSubmit');
-  var $newUserName = $('#newUserName');
-  var $signInForm = $('#signInForm');
-  var $navbar = $('#navbar');
-
-  // Instantiate chat module, load messages, and listen for new ones
-  var chat = new Chat({ chatBody: '#chatBody', chatMessage: '#chatMessage', chatBtn: '#chatSubmit' });
-  // chat.loadMessages();
-  chat.listenForMessages();
 
   // Constructor function for players
   function Player(username) {
@@ -69,77 +62,6 @@ $(document).ready(function() {
       }
     }
   };
-
-  // Event bindings
-  $newUserSubmitBtn.on('click', signIn);
-  $playerOneGameButtons.forEach(function(btn) {
-    btn.on('click', submitPlayerOneMove);
-  });
-  $playerTwoGameButtons.forEach(function(btn) {
-    btn.on('click', submitPlayerTwoMove);
-  });
-
-  /*
-   * Database value listeners
-   */
-
-  // Watch for new game
-  database.ref('game/').limitToLast(1).on('value', function(snap) {
-    if (game.finished) {
-      //
-    }
-    if (!game.key) {
-      if (snap.val()) {
-        let key = '';
-        for (var n in snap.val()) {
-          key = n;
-        }
-        if (!snap.child(key + '/finished').exists()) {
-          game.key = key;
-          setDatabaseListeners();
-          console.log('Joined the game: ', game.key);
-        } else {
-          setGameKey();
-        }
-      } else {
-        console.log('Nothing in the snapshot!');
-        return;
-      }
-    }
-  });
-
-  function setDatabaseListeners() {
-    // Watch for players joining
-    database.ref(`game/${game.key}/players/`).on('value', function(snap) {
-      if (snap.child('playerOne').exists()) {
-        game.playerOne = new Player(snap.child('playerOne/username').val());
-        $playerOneTitleDiv.text(game.playerOne.username);
-      } else {
-        game.playerOne = null;
-        $playerOneTitleDiv.text('Waiting for a new player');
-      }
-      if (snap.child('playerTwo').exists()) {
-        game.playerTwo = new Player(snap.child('playerTwo/username').val());
-        $playerTwoTitleDiv.text(game.playerTwo.username);
-      } else {
-        game.playerTwo = null;
-        $playerTwoTitleDiv.text('Waiting for a new player');
-      }
-      toggleSignInBar();
-    });
-
-    // Watch for player one moves
-    database.ref(`game/${game.key}/playerOne/choice`).on('value', function(snap) {
-      game.playerOneChoice = snap.val();
-      evaluateTurns();
-    });
-
-    // Watch for player two moves
-    database.ref(`game/${game.key}/playerTwo/choice`).on('value', function(snap) {
-      game.playerTwoChoice = snap.val();
-      evaluateTurns();
-    });
-  }
 
   function signIn(e) {
     e.preventDefault();
@@ -315,9 +237,105 @@ $(document).ready(function() {
     $playerTwoGameArea.fadeIn();
   }
 
-  // Hide game areas to start
-  $playerOneGameArea.hide();
-  $playerTwoGameArea.hide();
-});
+  function setDatabaseListeners() {
+    // Watch for players joining
+    database.ref(`game/${game.key}/players/`).on('value', function(snap) {
+      if (snap.child('playerOne').exists()) {
+        game.playerOne = new Player(snap.child('playerOne/username').val());
+        $playerOneTitleDiv.text(game.playerOne.username);
+      } else {
+        game.playerOne = null;
+        $playerOneTitleDiv.text('Waiting for a new player');
+      }
+      if (snap.child('playerTwo').exists()) {
+        game.playerTwo = new Player(snap.child('playerTwo/username').val());
+        $playerTwoTitleDiv.text(game.playerTwo.username);
+      } else {
+        game.playerTwo = null;
+        $playerTwoTitleDiv.text('Waiting for a new player');
+      }
+      toggleSignInBar();
+    });
+
+    // Watch for player one moves
+    database.ref(`game/${game.key}/playerOne/choice`).on('value', function(snap) {
+      game.playerOneChoice = snap.val();
+      evaluateTurns();
+    });
+
+    // Watch for player two moves
+    database.ref(`game/${game.key}/playerTwo/choice`).on('value', function(snap) {
+      game.playerTwoChoice = snap.val();
+      evaluateTurns();
+    });
+  }
+
+  function init() {
+    // DOM cache - sign in
+    $newUserSubmitBtn = $('#newUserSubmit');
+    $newUserName = $('#newUserName');
+    $signInForm = $('#signInForm');
+    $navbar = $('#navbar');
+    // DOM cache - player pieces
+    $playerOneTitleDiv = $('#playerOneTitle');
+    $playerTwoTitleDiv = $('#playerTwoTitle');
+    $playerOneGameArea = $('#playerOneGameArea');
+    $playerTwoGameArea = $('#playerTwoGameArea');
+    $playerOneGameButtons = [$('#p1-rock'), $('#p1-paper'), $('#p1-scissors')];
+    $playerTwoGameButtons = [$('#p2-rock'), $('#p2-paper'), $('#p2-scissors')];
+
+    // Instantiate chat module, load messages, and listen for new ones
+    chat = new Chat({
+      chatBody: '#chatBody',
+      chatMessage: '#chatMessage',
+      chatBtn: '#chatSubmit'
+    });
+    chat.listenForMessages();
+
+    // Event bindings
+    $newUserSubmitBtn.on('click', signIn);
+    $playerOneGameButtons.forEach(function(btn) {
+      btn.on('click', submitPlayerOneMove);
+    });
+    $playerTwoGameButtons.forEach(function(btn) {
+      btn.on('click', submitPlayerTwoMove);
+    });
+
+    // Hide game areas to start
+    $playerOneGameArea.hide();
+    $playerTwoGameArea.hide();
+
+    // Watch for new game
+    database.ref('game/').limitToLast(1).on('value', function(snap) {
+      if (game.finished) {
+        //
+      }
+      if (!game.key) {
+        if (snap.val()) {
+          let key = '';
+          for (var n in snap.val()) {
+            key = n;
+          }
+          if (!snap.child(key + '/finished').exists()) {
+            game.key = key;
+            setDatabaseListeners();
+            console.log('Joined the game: ', game.key);
+          } else {
+            setGameKey();
+          }
+        } else {
+          console.log('Nothing in the snapshot!');
+          return;
+        }
+      }
+    });
+  }
+
+  return {
+    init: init
+  };
+})();
+
+$(document).ready(App.init);
 
 // TODO: Find way to improve game reloading experience
